@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지독한 놈의 빼빼로 만들기</title>
+  <style>
+    :root {
+      --bg-color: #fce4ec;
+      --card-bg: #ffffff;
+      --primary: #d81b60;
+      --primary-hover: #c2185b;
+      --text: #2c3e50;
+      --accent: #ff80ab;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 10px;
+    }
+
+    .header-title {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--primary);
+      text-shadow: 2px 2px 0px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    /* 1. 내 빼빼로 이미지 (캔버스 영역) */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #fff0f5;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.04);
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    /* 2. 빼빼로 종류 선택 */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .type-btn {
+      background: #f5f5f5;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 10px 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #555;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .type-btn:hover {
+      background: #eee;
+    }
+
+    .type-btn.active {
+      border-color: var(--primary);
+      background: #fff0f5;
+      color: var(--primary);
+    }
+
+    .type-color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+
+    /* 3. 꾸미기 도구 선택 */
+    .tool-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      background: #f0f0f0;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .pen-options, .sprinkle-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .color-picker {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .color-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: transform 0.15s;
+    }
+
+    .color-dot:hover {
+      transform: scale(1.1);
+    }
+
+    .color-dot.active {
+      transform: scale(1.15);
+      outline: 3px solid var(--primary);
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .slider-group input {
+      flex: 1;
+      accent-color: var(--primary);
+    }
+
+    .sprinkle-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .sprinkle-btn {
+      background: #f8f9fa;
+      border: 2px solid #eee;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sprinkle-btn.active {
+      border-color: var(--primary);
+      background: #fff0f5;
+      color: var(--primary);
+    }
+
+    /* 4. 되돌리기 다시그리기 */
+    .action-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: #eceff1;
+      color: #37474f;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #cfd8dc;
+    }
+
+    /* 5. 내 빼빼로 저장 */
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(216, 27, 96, 0.3);
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="header-title">지독한 놈의 빼빼로 만들기</h1>
+
+  <div class="container">
+    <!-- 1. 내 빼빼로 이미지 -->
+    <div class="card" style="padding: 10px;">
+      <div class="canvas-container" id="canvas-wrap">
+        <canvas id="pepero-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- 2. 빼빼로 종류 선택 -->
+    <div class="card">
+      <div class="card-title">빼빼로 종류 선택</div>
+      <div class="type-grid">
+        <button class="type-btn active" data-type="classic">
+          <div class="type-color-dot" style="background: #4a2c11;"></div>
+          클래식
+        </button>
+        <button class="type-btn" data-type="white">
+          <div class="type-color-dot" style="background: #fff9e6; border: 1px solid #ccc;"></div>
+          화이트 초코
+        </button>
+        <button class="type-btn" data-type="strawberry">
+          <div class="type-color-dot" style="background: #ff80ab;"></div>
+          딸기 상큼
+        </button>
+        <button class="type-btn" data-type="nude">
+          <div class="type-color-dot" style="background: #e6b800;"></div>
+          누드
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. 꾸미기 도구 선택 -->
+    <div class="card">
+      <div class="card-title">꾸미기 도구 선택</div>
+      <div class="tool-tabs">
+        <button class="tab-btn active" id="tab-pen">초코펜 ✍️</button>
+        <button class="tab-btn" id="tab-sprinkle">스프링클 ✨</button>
+      </div>
+
+      <!-- 초코펜 옵션 -->
+      <div class="pen-options" id="pen-controls">
+        <div class="color-picker">
+          <div class="color-dot active" style="background: #ffffff;" data-color="#ffffff"></div>
+          <div class="color-dot" style="background: #3e2723;" data-color="#3e2723"></div>
+          <div class="color-dot" style="background: #f48fb1;" data-color="#f48fb1"></div>
+          <div class="color-dot" style="background: #80cbc4;" data-color="#80cbc4"></div>
+          <div class="color-dot" style="background: #ffe082;" data-color="#ffe082"></div>
+          <div class="color-dot" style="background: #ce93d8;" data-color="#ce93d8"></div>
+          <div class="color-dot" style="background: #ffab91;" data-color="#ffab91"></div>
+          <div class="color-dot" style="background: #b0bec5;" data-color="#b0bec5"></div>
+        </div>
+        <div class="slider-group">
+          <span>두께</span>
+          <input type="range" id="pen-size" min="2" max="25" value="6">
+          <span id="size-val">6px</span>
+        </div>
+      </div>
+
+      <!-- 스프링클 옵션 -->
+      <div class="sprinkle-options" id="sprinkle-controls" style="display: none;">
+        <div class="sprinkle-grid">
+          <button class="sprinkle-btn active" data-shape="heart">💗 하트</button>
+          <button class="sprinkle-btn" data-shape="star">⭐ 별</button>
+          <button class="sprinkle-btn" data-shape="circle">⭕ 동그라미</button>
+          <button class="sprinkle-btn" data-shape="stick">🥖 긴 모양</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 되돌리기 다시그리기 -->
+    <div class="action-row">
+      <button class="btn-secondary" id="btn-undo">↩️ 되돌리기</button>
+      <button class="btn-secondary" id="btn-reset">🔄 다시 그리기</button>
+    </div>
+
+    <!-- 5. 내 빼빼로 저장 -->
+    <button class="btn-primary" id="btn-save">📸 내 빼빼로 저장하기</button>
+  </div>
+
+  <script>
+    const canvasContainer = document.getElementById('canvas-wrap');
+    const canvas = document.getElementById('pepero-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // State variables
+    let currentType = 'classic';
+    let currentTool = 'pen';
+    let currentColor = '#ffffff';
+    let currentSize = 6;
+    let currentSprinkle = 'heart';
+    let isDrawing = false;
+    let undoStack = [];
+
+    // Dimensions
+    function initCanvasSize() {
+      const rect = canvasContainer.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      saveState();
+      drawPepero();
+    }
+
+    function saveState() {
+      if (undoStack.length > 15) undoStack.shift();
+      undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    }
+
+    function undo() {
+      if (undoStack.length > 1) {
+        undoStack.pop();
+        const previousState = undoStack[undoStack.length - 1];
+        ctx.putImageData(previousState, 0, 0);
+      }
+    }
+
+    function drawPepero() {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // 빅파이 스타일 크기 (도통함)
+      const pWidth = 140;
+      const pHeight = 360;
+      const x = (w - pWidth) / 2;
+      const y = (h - pHeight) / 2;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // 1. 스틱 손잡이 (비스킷 부분)
+      const stickHeight = 70;
+      const biscuitY = y + pHeight - stickHeight;
+      
+      // Biscuit shape
+      ctx.fillStyle = '#e6b800';
+      ctx.beginPath();
+      ctx.roundRect(x + 10, biscuitY, pWidth - 20, stickHeight, [0, 0, 16, 16]);
+      ctx.fill();
+
+      // Biscuit legs (캐릭터 다리 느낌)
+      ctx.fillStyle = '#cc9900';
+      ctx.fillRect(x + 35, biscuitY + stickHeight - 12, 16, 12);
+      ctx.fillRect(x + pWidth - 51, biscuitY + stickHeight - 12, 16, 12);
+
+      // 2. 초코 코팅 부분
+      let coatColor = '#4a2c11';
+      if (currentType === 'white') coatColor = '#fffdf0';
+      if (currentType === 'strawberry') coatColor = '#ff6699';
+      if (currentType === 'nude') coatColor = '#e6b800';
+
+      const coatHeight = pHeight - stickHeight + 10;
+      
+      ctx.fillStyle = coatColor;
+      ctx.beginPath();
+      ctx.roundRect(x, y, pWidth, coatHeight, [24, 24, 8, 8]);
+      ctx.fill();
+
+      // Nude pepero inner choco top indicator
+      if (currentType === 'nude') {
+        ctx.fillStyle = '#3e2723';
+        ctx.beginPath();
+        ctx.ellipse(x + pWidth / 2, y + 15, 30, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 3. 캐릭터 눈/입 표현
+      const eyeY = y + 70;
+      const eyeDistance = 28;
+
+      // Eyes Outer White
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x + pWidth / 2 - eyeDistance, eyeY, 14, 0, Math.PI * 2);
+      ctx.arc(x + pWidth / 2 + eyeDistance, eyeY, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes Inner Black
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath();
+      ctx.arc(x + pWidth / 2 - eyeDistance, eyeY, 7, 0, Math.PI * 2);
+      ctx.arc(x + pWidth / 2 + eyeDistance, eyeY, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cute blush
+      ctx.fillStyle = 'rgba(255, 100, 100, 0.4)';
+      ctx.beginPath();
+      ctx.arc(x + pWidth / 2 - eyeDistance - 16, eyeY + 12, 8, 0, Math.PI * 2);
+      ctx.arc(x + pWidth / 2 + eyeDistance + 16, eyeY + 12, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bow tie
+      ctx.fillStyle = '#e53935';
+      const bowY = eyeY + 45;
+      const bowX = x + pWidth / 2;
+      ctx.beginPath();
+      ctx.moveTo(bowX, bowY);
+      ctx.lineTo(bowX - 14, bowY - 8);
+      ctx.lineTo(bowX - 14, bowY + 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(bowX, bowY);
+      ctx.lineTo(bowX + 14, bowY - 8);
+      ctx.lineTo(bowX + 14, bowY + 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(bowX, bowY, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Base saved for undo initialization
+      undoStack = [ctx.getImageData(0, 0, w, h)];
+    }
+
+    // Drawing Logic
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startDraw(e) {
+      isDrawing = true;
+      const pos = getPos(e);
+
+      if (currentTool === 'pen') {
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentSize;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+      } else {
+        drawSprinkle(pos.x, pos.y);
+      }
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const pos = getPos(e);
+
+      if (currentTool === 'pen') {
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+    }
+
+    function stopDraw() {
+      if (isDrawing) {
+        isDrawing = false;
+        saveState();
+      }
+    }
+
+    function drawSprinkle(x, y) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate((Math.random() - 0.5) * 0.8);
+
+      const colors = ['#ff4081', '#ffeb3b', '#00e676', '#00b0ff', '#e040fb', '#ffffff'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+
+      if (currentSprinkle === 'heart') {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.scale(0.8, 0.8);
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(-6, -10, -14, -2, 0, 10);
+        ctx.bezierCurveTo(14, -2, 6, -10, 0, 0);
+        ctx.fill();
+      } else if (currentSprinkle === 'star') {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * 10, -Math.sin((18 + i * 72) * Math.PI / 180) * 10);
+          ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * 4, -Math.sin((54 + i * 72) * Math.PI / 180) * 4);
+        }
+        ctx.fill();
+      } else if (currentSprinkle === 'circle') {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (currentSprinkle === 'stick') {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.roundRect(-3, -10, 6, 20, 3);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    // Event Listeners
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDraw);
+
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+    canvas.addEventListener('touchend', stopDraw);
+
+    // Type Selection
+    document.querySelectorAll('.type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentType = btn.dataset.type;
+        drawPepero();
+      });
+    });
+
+    // Tool Tabs
+    const tabPen = document.getElementById('tab-pen');
+    const tabSprinkle = document.getElementById('tab-sprinkle');
+    const penControls = document.getElementById('pen-controls');
+    const sprinkleControls = document.getElementById('sprinkle-controls');
+
+    tabPen.addEventListener('click', () => {
+      tabPen.classList.add('active');
+      tabSprinkle.classList.remove('active');
+      penControls.style.display = 'flex';
+      sprinkleControls.style.display = 'none';
+      currentTool = 'pen';
+    });
+
+    tabSprinkle.addEventListener('click', () => {
+      tabSprinkle.classList.add('active');
+      tabPen.classList.remove('active');
+      sprinkleControls.style.display = 'flex';
+      penControls.style.display = 'none';
+      currentTool = 'sprinkle';
+    });
+
+    // Color selection
+    document.querySelectorAll('.color-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        currentColor = dot.dataset.color;
+      });
+    });
+
+    // Pen Size
+    const penSizeInput = document.getElementById('pen-size');
+    const sizeVal = document.getElementById('size-val');
+    penSizeInput.addEventListener('input', (e) => {
+      currentSize = e.target.value;
+      sizeVal.textContent = `${currentSize}px`;
+    });
+
+    // Sprinkle selection
+    document.querySelectorAll('.sprinkle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sprinkle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSprinkle = btn.dataset.shape;
+      });
+    });
+
+    // Actions
+    document.getElementById('btn-undo').addEventListener('click', undo);
+    document.getElementById('btn-reset').addEventListener('click', drawPepero);
+
+    // Save Image
+    document.getElementById('btn-save').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'my-pepero.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // Init
+    window.addEventListener('load', () => {
+      initCanvasSize();
+    });
+  </script>
+</body>
+</html>
